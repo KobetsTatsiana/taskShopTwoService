@@ -6,6 +6,7 @@ public class Product {
 
     public Product() {
     }
+    //добавлено для теста
     public Product(UUID uuid, String name, int price, int quantity) {
         this.uuid = uuid;
         this.name = name;
@@ -20,7 +21,6 @@ public class Product {
     private int price;
 
     private int quantity;
-
 
 
     public UUID getUuid() {
@@ -53,5 +53,12 @@ public class Product {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    @Override
+    public String toString() {
+        return "Product{" +
+                "name='" + name + '\'' +
+                '}';
     }
 }

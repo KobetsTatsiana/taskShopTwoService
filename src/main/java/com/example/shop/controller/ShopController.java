@@ -1,7 +1,8 @@
 package com.example.shop.controller;
 
+import com.example.shop.model.Order;
 import com.example.shop.model.Product;
-import com.example.shop.sevice.impl.ShopServiceImpl;
+import com.example.shop.service.impl.ShopServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,8 +29,7 @@ public class ShopController {
         this.service = service;
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(ShopController.class);
-
+    private static final Logger logger = LoggerFactory.getLogger( ShopController.class );
     @GetMapping("/goods")
     @Operation(summary = "Получить все товары", description = "Возвращает список всех товаров")
     @ApiResponse(responseCode = "200", description = "Returned list of products")
@@ -39,16 +39,22 @@ public class ShopController {
     }
 
     @PostMapping("/order")
-    @Operation(summary = "Получить заказ", description = "получает заказ")
+    @Operation(summary = "Отправить заказ", description = "Отправить заказ")
     @ApiResponse(responseCode = "200", description = "Returned list of products")
     public ResponseEntity<String> saveAllGoods(@RequestBody List<Product> products) {
-        try {
-            service.check(products);
-            return new ResponseEntity<>("Заказ получен", HttpStatus.CREATED);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-            return new ResponseEntity<>("Error saving products", HttpStatus.INTERNAL_SERVER_ERROR);
+        try{
+            service.check( products );
+            return new ResponseEntity<>( "Заказ получен", HttpStatus.CREATED );
+        } catch(Exception e){
+            logger.error( e.getMessage() );
+            return new ResponseEntity<>( "Error saving products", HttpStatus.INTERNAL_SERVER_ERROR );
         }
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<String> createOrder(@RequestBody Order order){
+        System.out.println(order);
+        return null;
     }
 }
 

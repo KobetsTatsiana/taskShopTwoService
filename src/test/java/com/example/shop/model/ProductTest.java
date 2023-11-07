@@ -43,4 +43,15 @@ public class ProductTest {
         product.setQuantity(quantity);
         assertEquals(quantity, product.getQuantity());
     }
+    @Test
+    public void testToString() {
+        UUID uuid = UUID.randomUUID();
+        String name = "Test Product";
+        int price = 100;
+        int quantity = 10;
+        Product product = new Product(uuid, name, price, quantity);
+        String expected = "Product{name='Test Product'}";
+        String actual = product.toString();
+        assertEquals(expected, actual);
+    }
 }

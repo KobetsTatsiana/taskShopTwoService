@@ -1,8 +1,6 @@
-package com.example.shop.sevice;
+package com.example.shop.service;
 
 import com.example.shop.model.Product;
-import com.example.shop.sevice.ShopService;
-import com.example.shop.sevice.impl.ShopServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,18 +1,23 @@
-package com.example.shop.sevice.impl;
+package com.example.shop.service.impl;
 
+import com.example.shop.model.Order;
 import com.example.shop.model.Product;
-import com.example.shop.sevice.ShopService;
+import com.example.shop.service.ShopService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ShopServiceImpl implements ShopService {
@@ -20,27 +25,9 @@ public class ShopServiceImpl implements ShopService {
     @Value("${goodsServiceUrl}")
     String urlShopService;
 
-    @Override
-    public void setUrlShopService(String urlShopService) {
-        this.urlShopService = urlShopService;
-    }
-    @Value("${urlOrderService}")
+    @Value( "${urlOrderService}" )
     String urlOrderService;
-
-    @Override
-    public void setUrlOrderService(String urlOrderService) {
-        this.urlOrderService = urlOrderService; // Исправляем присвоение правильного свойства
-    }
-
-    @Override
-    public String getUrlShopService() {
-        return urlShopService;
-    }
-
-    @Override
-    public String getUrlOrderService() {
-        return urlOrderService; // Возвращаем правильное свойство
-    }
+    private RestTemplate restTemplate;
 
     @Override
     public List<Product> getAll() {
@@ -50,8 +37,7 @@ public class ShopServiceImpl implements ShopService {
                 urlShopService,
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<List<Product>>() {
-                }
+                new ParameterizedTypeReference<List<Product>>() {}
         );
 
         return response.getBody();
@@ -75,7 +61,7 @@ public class ShopServiceImpl implements ShopService {
     }
 
     @Override
-    public void check(List<Product> products) {
+    public void   check(List<Product> products) {
         List<Product> existGoods = getAll();
         List<Product> checkedGoods = new ArrayList<>();
 //        List<Product> errorQuantity = new ArrayList<>();
@@ -90,11 +76,29 @@ public class ShopServiceImpl implements ShopService {
 //                    errorQuantity.add(existingProduct);
             }
         }
-//        if (errorQuantity.size()>0){
-//            return errorQuantity;
-//        }
+
         updateGoods(existGoods);
-        sendToAnotherService(checkedGoods);
+        sendToAnotherService(checkedGoods, urlOrderService);
+    }
+
+    @Override
+    public void setUrlShopService(String urlShopService) {
+
+    }
+
+    @Override
+    public void setUrlOrderService(String urlOrderService) {
+
+    }
+
+
+    @Override
+    public String getUrlShopService() {
+        return urlShopService;
+    }
+    @Override
+    public String getUrlOrderService() {
+        return urlOrderService;
     }
 
     public Product findProductByUUID(UUID uuid, List<Product> products) {
@@ -106,20 +110,39 @@ public class ShopServiceImpl implements ShopService {
         return null;
     }
 
-    public void sendToAnotherService(List<Product> products) {
+
+    public void sendToAnotherService(List<Product> products, String urlOrderService) {
         RestTemplate restTemplate = new RestTemplate();
+        Order order = new Order();
+        order.setTimestamp(new Timestamp(System.currentTimeMillis()));
+        int sum = products.stream()
+                .mapToInt(product -> product.getPrice() * product.getQuantity())
+                .sum();
+        order.setSum(sum);
+        order.setClientId(UUID.randomUUID());
 
-        HttpEntity<List<Product>> requestEntity = new HttpEntity<>(products);
-        ResponseEntity<String> response = restTemplate.exchange(
-                urlOrderService,
-                HttpMethod.POST,
-                requestEntity,
-                String.class
-        );
+        List<String> productNames = products.stream()
+                .map(Product::getName)
+                .collect(Collectors.toList());
+        order.setProducts(productNames);
 
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("Failed to send products to another service. Status code: " + response.getStatusCode());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Order> requestEntity = new HttpEntity<>(order, headers);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(urlOrderService, requestEntity, String.class);
+
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            System.out.println("Order successfully created: " + response.getBody());
+        } else {
+            System.out.println("Failed to create order: " + response.getStatusCode());
         }
-    }
 
+    }
+//добавлен для тестов
+    public void setRestTemplate(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 }
